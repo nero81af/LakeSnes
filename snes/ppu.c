@@ -188,6 +188,7 @@ void ppu_reset(Ppu* ppu) {
   ppu->fixedColorG = 0;
   ppu->fixedColorB = 0;
   ppu->forcedBlank = true;
+  ppu->clearLayers = 0;
   ppu->brightness = 0;
   ppu->mode = 0;
   ppu->bg3priority = false;
@@ -310,6 +311,7 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
   int g = 0, g2 = 0;
   int b = 0, b2 = 0;
   bool halfColor = ppu->halfColor;
+  uint32_t alpha = 0xff000000;
   // cache for speed-up
   bg_window_state[0] = ppu_getWindowState(ppu, 0, x);
   bg_window_state[1] = ppu_getWindowState(ppu, 1, x);
@@ -319,6 +321,7 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
   bg_window_state[5] = ppu_getWindowState(ppu, 5, x);
   if(!ppu->forcedBlank) {
     int mainLayer = ppu_getPixel(ppu, x, y, false, &r, &g, &b);
+    if(ppu->clearLayers & (1 << (mainLayer == 6 ? 4 : mainLayer))) alpha = 0;
     bool colorWindowState = bg_window_state[5];
     bool bClipIfHires = false;
     if(
@@ -398,11 +401,11 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
 
   dest[0] = ((((b2 << 3) | (b2 >> 2)) * bright_now) >> 16) << 0 |
             ((((g2 << 3) | (g2 >> 2)) * bright_now) >> 16) << 8 |
-            ((((r2 << 3) | (r2 >> 2)) * bright_now) >> 16) << 16;
+            ((((r2 << 3) | (r2 >> 2)) * bright_now) >> 16) << 16 | alpha;
 
   dest[1] = ((((b << 3) | (b >> 2)) * bright_now) >> 16) << 0 |
             ((((g << 3) | (g >> 2)) * bright_now) >> 16) << 8 |
-            ((((r << 3) | (r >> 2)) * bright_now) >> 16) << 16;
+            ((((r << 3) | (r >> 2)) * bright_now) >> 16) << 16 | alpha;
 }
 
 static int ppu_getPixel(Ppu* ppu, int x, int y, bool sub, int* r, int* g, int* b) {

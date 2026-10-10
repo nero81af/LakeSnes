@@ -124,6 +124,11 @@ struct Ppu {
   bool countersLatched;
   uint8_t ppu1openBus;
   uint8_t ppu2openBus;
+  // front-end setting, not console state: the main-screen layers (bit 0-3 BG1-4,
+  // 4 sprites, 5 backdrop) whose pixels get alpha 0 in the pixel buffer's top
+  // byte (every other pixel 0xff), so a front end can lay its own picture under
+  // them; 0 = every pixel opaque
+  uint8_t clearLayers;
   // pixel buffer (xbgr)
   // times 2 for even and odd frame
   uint8_t pixelBuffer[512 * 4 * 239 * 2];
